@@ -1,4 +1,4 @@
-############ R Studio Used to : (1) add rsIDs to summary stats and (2) rename columns for FOCUS analyses 
+############ R Studio Used to : (1) add rsIDs to summary stats and (2) rename columns for FOCUS analyses ############ 
 
 #install.packages("data.table")
 #install.packages("R.utils")
@@ -88,4 +88,29 @@ download.file(url="https://data.broadinstitute.org/alkesgroup/LDSCORE/1000G_Phas
 
 #### save 1000 Genome data to server ####
 write.table(`1000G.EUR.GC.1`, "/home/projects/pcos/FOCUS/1000G.EUR.GC.1.bim", quote=F, row.names = F)
+
+############ Remove "chr" from Day harmonized with rsID's added file ############
+
+#!/bin/bash
+  
+INPUT=/home/projects/pcos/FOCUS/Fine_Mapping/Old_Files
+INPUT2=/home/projects/pcos/FOCUS/Fine_Mapping
+
+sed 's/chr//g' $INPUT/format_Day_2018_harmonized_rsids.txt.gz > $INPUT2/New_format_Day_2018_harmonized_rsids.txt.gz
+
+############ Run FOCUS Analyses ############
+
+#!/bin/bash
+  
+REF=/home/projects/reference_data/focus
+OUTPUT=/home/projects/pcos/FOCUS/Fine_Mapping
+
+focus finemap \
+$OUTPUT/Day_no_liftover_rsIDs.txt \
+$REF/1000G_EUR_Phase3_plink/1000G.EUR.QC.11 \
+$REF/focus.db --chr 11 \
+--p-threshold 0.000001 \
+--out $OUTPUT/results/Day_focus_finemapping.chr11
+
+
                                                                                                                                                              88,1          Bot
