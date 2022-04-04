@@ -1,0 +1,24 @@
+#!/bin/bash
+# Here you could write HPC directives if running on a compute cluster
+METAXCAN=/opt/github_repository/MetaXcan/software
+REF=/home/projects/reference_data/metaxcan/data
+OUTPUT=/home/projects/pcos/MetaXcan_results
+
+python3.8 $METAXCAN/SMulTiXcan.py \
+        --models_folder $REF/models/eqtl/mashr \
+        --models_name_pattern "mashr_(.*).db" \
+        --snp_covariance $REF/models/gtex_v8_expression_mashr_snp_smultixcan_covariance.txt.gz \
+        --metaxcan_folder $OUTPUT/spredixcan/eqtl/Day_2018_spredixcan_results  \
+        --metaxcan_filter "Day_2018_(.*).csv" \
+        --metaxcan_file_name_parse_pattern "(.*)_(.*).csv" \
+        --gwas_file $OUTPUT/harmonized_gwas/Day_2018_data_harmonized.txt.gz \
+        --snp_column panel_variant_id \
+        --effect_allele_column effect_allele \
+        --non_effect_allele_column non_effect_allele \
+        --beta_column effect_size --se_column standard_error \
+        --keep_non_rsid \
+        --model_db_snp_key varID \
+        --cutoff_condition_number 30 \
+        --verbosity 7 \
+        --throw \
+        --output $OUTPUT/smultixcan.txt/eqtl/Day_2018_smultixcan.txt
