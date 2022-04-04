@@ -1,0 +1,91 @@
+############ R Studio Used to : (1) add rsIDs to summary stats and (2) rename columns for FOCUS analyses 
+
+#install.packages("data.table")
+#install.packages("R.utils")
+#### load libraries ####
+library(data.table)
+library(dplyr)
+#### Load Data: Read in GTEX and GWAS data ####
+
+GTEX <- fread("/home/projects/reference_data/metaxcan/data/liftover/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.lookup_table.txt.gz")
+Day <- fread("/home/projects/pcos/MetaXcan_results/harmonized_gwas/Day_2018_data_harmonized.txt.gz")
+
+#### Keep only panel_variant_ID and rs_ID columns from GTEx ####
+GTEX <- GTEX[ , c(1,7)]
+
+#### Rename columns ####
+GTEX <- GTEX %>%
+  rename(
+      panel_variant_id = variant_id,
+     rs_id =  rs_id_dbSNP151_GRCh38p7
+    )
+
+#### merge with GWAS data to add rsIDs ####
+Day_rs_ids <- left_join(Day, GTEX, by = "panel_variant_id")
+head(Day_rs_ids)
+
+#### format summary stats for FOCUS ####
+
+# column names :SNP, CHR, BP, A1, A2, FRQ, N, Z, P, BETA 
+
+#Value change : chromosome into numeric value 
+#Day_rs_ids <- replace(Day_rs_ids, 3, '1')
+Day_rs_id <- gsub("chr", " ", Day_rs_ids)
+
+# Column Name change : chromosome to CHR
+Day_rs_ids <- Day_rs_ids %>%
+  rename (CHR = chromosome)
+
+#  Column Name change : rs_id to SNP 
+Day_rs_ids <- Day_rs_ids %>%
+  rename (SNP = rs_id)
+
+# Column Name change : position to BP
+Day_rs_ids <- Day_rs_ids %>%
+  rename (BP = position)
+
+# Column Name change : effect_allele to A1
+Day_rs_ids <- Day_rs_ids %>%
+  rename (A1 = effect_allele)
+
+# Column Name change : non_effect_allele to A2
+Day_rs_ids <- Day_rs_ids %>%
+  rename (A2 = non_effect_allele)
+
+# Column Name change : frequency to FRQ
+Day_rs_ids <- Day_rs_ids %>%
+  rename (FRQ = frequency)
+
+# Column Name change : sample_size to N
+Day_rs_ids <- Day_rs_ids %>%
+  rename (N = sample_size )
+
+# Column Name change : zscore to Z
+Day_rs_ids <- Day_rs_ids %>%
+  rename (Z = zscore)
+
+# Column Name change : pvalue to P
+Day_rs_ids <- Day_rs_ids %>%
+  rename (P = pvalue)
+
+# Column Name change : ? to BETA
+#Day_rs_ids <- Day_rs_ids %>%
+ # rename (BETA = )
+
+# Column Name change : n_cases to N_CAS
+Day_rs_ids <- Day_rs_ids %>%
+  rename (N_CAS =  n_cases)
+
+# Column Name change : standard_error to SE
+Day_rs_ids <- Day_rs_ids %>%
+  rename (standard_error = SE)
+
+#### Save data- Day_rs_ids ####
+write.table(Day_rs_ids, "/home/projects/pcos/FOCUS/Day_2018_data_harmonized_with_rsIDs.txt", quote=F, row.names = F)
+
+#### Download 1000 Genome data  ####
+download.file(url="https://data.broadinstitute.org/alkesgroup/LDSCORE/1000G_Phase1_plinkfiles.tgz",dest="./1000G_Phase1_plinkfiles.tgz")
+
+#### save 1000 Genome data to server ####
+write.table(`1000G.EUR.GC.1`, "/home/projects/pcos/FOCUS/1000G.EUR.GC.1.bim", quote=F, row.names = F)
+                                                                                                                                                             88,1          Bot
