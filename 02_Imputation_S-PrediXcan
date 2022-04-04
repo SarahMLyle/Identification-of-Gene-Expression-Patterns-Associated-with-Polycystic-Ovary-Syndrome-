@@ -1,0 +1,39 @@
+################# Imputation of Day Harmonized Summary Statistics #################
+
+#!/bin/bash
+
+GWAS_TOOLS=/opt/github_repository/summary-gwas-imputation/src
+REF=/home/projects/reference_data/metaxcan/data
+OUTPUT=/home/projects/pcos/MetaXcan_results
+
+python3.8 $GWAS_TOOLS/gwas_summary_imputation_postprocess.py \
+-gwas_file $OUTPUT/harmonized_gwas/Day_2018_data_harmonized.txt.gz \
+-folder $OUTPUT/imputation \
+-pattern  Day_harmonized.* \
+-parsimony 7 \
+-output $OUTPUT/processed_summary_imputation/Day_2018_harmonized_imputed.txt.gz
+
+################# Day Summary Statistics (Harmonized and Imputed) run via SPrediXcan #################
+
+#!/bin/bash
+
+METAXCAN=/opt/github_repository/MetaXcan/software
+REF=/home/projects/reference_data/metaxcan/data/models/eqtl/mashr
+DATA=/home/projects/pcos/MetaXcan_results
+OUTPUT=/home/projects/pcos/MetaXcan_results/spredixcan/eqtl/Day_2018_spredixcan_results
+
+cd $METAXCAN
+while read tissue
+do
+
+python3.8 $METAXCAN/SPrediXcan.py \
+        --gwas_file $DATA/processed_summary_imputation/Day_2018_harmonized_imputed.txt.gz \
+        --snp_column panel_variant_id --effect_allele_column effect_allele --non_effect_allele_column non_effect_allele \
+        --beta_column effect_size --se_column standard_column \
+        --model_db_path $REF/mashr_${tissue}.db \
+        --covariance $REF/mashr_${tissue}.txt.gz \
+        --keep_non_rsid --additional_output --model_db_snp_key varID \
+        --throw \
+        --output_file $OUTPUT/Day_2018_${tissue}.csv
+done </home/projects/pcos/gtex_tissues_v7.txt
+
