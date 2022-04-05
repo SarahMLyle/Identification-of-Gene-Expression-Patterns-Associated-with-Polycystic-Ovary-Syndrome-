@@ -1,0 +1,57 @@
+######### Completed in RStudio ######### 
+
+# Libraries
+install.packages(c('data.table','optparse','ggplot2','ggrepel','cowplot','dplyr'))
+library(data.table)
+library(optparse)
+library(ggplot2)
+library(ggrepel)
+library(cowplot)
+library(dplyr)
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("biomaRt")
+
+library(biomaRt)
+
+# TWAS Manhattan/Miami plot for Day values 
+
+# Only keep protein coding genes and specify Ensembl data that you want
+ensembl <- useMart("ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl", host="ensembl.org", path="/biomart/martservice", archive=FALSE, verbose=TRUE)
+
+#Get a list of filters
+filters <- listFilters(ensembl)
+
+#Get a list of attributes
+attributes <- listAttributes(ensembl)
+
+#reloaded smulitxcan as 2nd version, changed name back to just smultixcan 
+Day_2018_smultixcan<-Day_2018_smultixcan_2
+
+#Get a list of genes that you want to filter by (from smultixcan results)
+Day_2018_smultixcan$gene<-as.factor(substr(Day_2018_smultixcan$gene,1,15))
+filterlist <- unique(Day_2018_smultixcan$gene)
+
+#specify what info you want
+protein_coding_notmerged <- getBM(attributes = c("hgnc_symbol","ensembl_gene_id","gene_biotype", "chromosome_name","start_position", "end_position"),filters = c("ensembl_gene_id"),values = filterlist, mart = ensembl)
+names(protein_coding_notmerged)[names(protein_coding_notmerged) == "ensembl_gene_id"] <- "gene"
+protein_coding<-inner_join(Day_2018_smultixcan,protein_coding_notmerged, by="gene")
+
+#This is changing the names so that they work with the TWAS_plottter program 
+names(protein_coding)[names(protein_coding) == "hgnc_symbol"] <- "ID" 
+names(protein_coding)[names(protein_coding) == "chromosome_name"] <- "CHR" 
+names(protein_coding)[names(protein_coding) == "start_position"] <- "P0"
+names(protein_coding)[names(protein_coding) == "end_position"] <- "P1"
+names(protein_coding)[names(protein_coding) == "z_max"] <- "TWAS.Z"
+names(protein_coding)[names(protein_coding) == "pvalue"] <- "TWAS.P"
+write.table(protein_coding, file="/Users/janicelyle/Desktop/TWAS-plotter-master/Day_for_twas_plotter.txt", append = FALSE, sep ="\t", quote=FALSE,
+            row.names = FALSE, col.names = TRUE) #Putting this file into TWAS_Plotter in Linux to create a Miamiplot 
+
+######### Completed in Linux ######### 
+
+Rscript TWAS-plotter.V1.0.r \
+--twas # for_twas_plotter.txt file name  \
+--sig_z # z value \
+--sig_p # pvalue of smulitXcan \
+--output # filename 
