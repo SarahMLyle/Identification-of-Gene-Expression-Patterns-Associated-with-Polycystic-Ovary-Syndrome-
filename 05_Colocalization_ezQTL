@@ -1,0 +1,58 @@
+############ Format Day Summary Statistics for ezQTL ############
+
+#!/bin/bash
+
+DATA1=/home/projects/reference_data/metaxcan/data
+DATA2=/home/projects/pcos/ezQTL_Locus_Colocalization/results/Harmonization/harmonized_gwas
+DATA3=/home/projects/pcos/ezQTL_Locus_Colocalization/results/Locus_Selection
+
+#Select all chromosome 11 results from Day harmonized. Top result used in proceeding commands
+zcat $DATA2/Day_2018_data_harmonized.txt.gz | awk ' $3~/chr11/ ' | sort -g -k8 > $DATA3/Day_chromosome_11_sorted.txt
+
+#Select 2.5Mb (2 500 000) up and downstream from top result's position. from Day_chromosome_11_sorted.txt :30204981
+## >27704981 and <32704981
+#zcat $DATA2/Day_2018_data_harmonized.txt.gz | awk ' $3~/chr11/ ' | awk ' $4 >=27704981 ' | awk ' $4 <=32704981 ' >$DATA3/Day_chromosome_11_fence.txt 
+
+#Select 2Mb (2 000 000) up and downstream from top result's position. from Day_chromosome_11_sorted.txt :30204981
+## >28204981 and <32204981
+
+zcat $DATA2/Day_2018_data_harmonized.txt.gz | awk ' $3~/chr11/ ' | awk ' $4 >=28204981 ' | awk ' $4 <=32204981 ' >$DATA3/Day_chromosome_11_fence.txt
+
+# Select same up and downstream as Day_2018_data_harmonized.txt.gz. But for variant_metadata.txt.gz. In order to get rsids
+
+zcat $DATA1/variant_metadata.txt.gz |awk ' $1 = 11 ' | awk ' $2 >=27704981 ' | awk ' $2 <=32704981 ' | awk '{print $7,$3} '  >$DATA3/Day_chromosome_11_fence_rsid.txt
+
+#Sort both Day_chromosome_11_fence_rsid.txt and Day_chromosome_11_fence.txt by the column: id and panel_variant_id ie. chr1_27705041_GT_G_b38
+
+##Day_chromosome_11_fence_rsid.txt column "id" is column 2
+sort -k2 $DATA3/Day_chromosome_11_fence_rsid.txt > $DATA3/Day_chromosome_11_fence_rsid_sorted.txt
+
+## Day_chromosome_11_fence.txt column "panel_variant_id" is column 2
+sort -k2 $DATA3/Day_chromosome_11_fence.txt > $DATA3/Day_chromosome_11_fence_sorted.txt
+
+#Join Day_chromosome_11_fence_sorted_header.txt and Day_chromosome_11_fence_rsid_sorted_header.txt by the id and panel_variant_id column
+join -j2 $DATA3/Day_chromosome_11_fence_sorted.txt $DATA3/Day_chromosome_11_fence_rsid_sorted.txt > $DATA3/Day_joined.txt
+
+# Format headers to match ezQTL program
+##  from Day_joined: chromosome, position, non_effect_allele, effect_allele, rsid, pvalue, zscore, effect_size, standard_error
+## Needed for ezQTL input: chr   pos     ref     alt     rsnum   pvalue  zscore  effect  se
+cat $DATA3/Day_joined.txt | awk '{print $3,$4,$6,$5,$14,$8,$12,$9,$10} ' > $DATA3/Day_joined_selected.txt
+
+# Remove "chr" from infront of chrosome #
+sed 's/chr//g' $DATA3/Day_joined_selected.txt > $DATA3/Day_joined_selected_edit.txt
+
+# Format headers to match ezQTL program, completed in RStudio:
+
+# load data
+ezGTL_data<-fread(file = "/home/projects/pcos/ezQTL_Locus_Colocalization/results/Locus_Selection/Day_joined_selected_edit.txt",header=FALSE, stringsAsFactors = FALSE)
+
+# Create column names
+colnames(ezGTL_data)<- c('chr','pos','ref','alt','rsnum','pvalue','zscore','effect','se')
+
+#remove NA's
+ezGTL_data<-na.omit(ezGTL_data)
+
+# Save table to server 
+write.table(ezGTL_data,"/home/projects/pcos/ezQTL_Locus_Colocalization/results/Locus_Selection/Day_joined_selected_header.txt",row.names=FALSE,quote
+
+# Input data into https://analysistools.cancer.gov/ezqtl/#/qtls
