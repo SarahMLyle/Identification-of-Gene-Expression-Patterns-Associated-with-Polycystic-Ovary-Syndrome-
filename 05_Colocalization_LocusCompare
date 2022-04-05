@@ -1,0 +1,35 @@
+#!/bin/bash
+
+DATA1=/home/projects/reference_data/metaxcan/data
+DATA2=/home/projects/pcos/MetaXcan_results/harmonized_gwas
+DATA3=/home/projects/pcos/MetaXcan_results
+
+zcat $DATA2/Day_2018_data_harmonized.txt.gz | awk ' $3~/chr11/ ' | sort -g -k8 > $DATA2/Day_chromosome_11_sorted.txt
+
+# select region -500000 to +500000 from top resul's position
+
+zcat $DATA2/Day_2018_data_harmonized.txt.gz | awk ' $3~/chr11/ ' | awk ' $4 >=29704981 ' | awk ' $4 <=30704981 ' >$DATA2/Day_chromosome_11_fence.txt
+
+zcat $DATA1/variant_metadata.txt.gz |awk ' $1 = 11 ' | awk ' $2 >=29704981 ' | awk ' $2 <=30704981 ' | awk '{print $7,$3} '  >$DATA3/Day_chromosome_11_fence_rsid.txt
+
+zcat $DATA2/Day_2018_data_harmonized.txt.gz | sed '1d' >$DATA2/Day_harmonized_header.txt
+
+cat $DATA2/Day_harmonized_header.txt $DATA2/Day_chromosome_11_fence.txt  >$DATA2/Day_chromosome_11_fence_header.txt
+
+zcat $DATA1/variant_metadata.txt.gz | sed '1d' >$DATA3/Metadata_header.txt
+
+cat $DATA3/Metadata_header.txt $DATA3/Day_chromosome_11_fence_rsid.txt > $DATA3/Day_chromosome_11_fence_rsid_header.txt
+
+sort -k2 $DATA3/Day_chromosome_11_fence_rsid.txt > $DATA3/Day_chromosome_11_fence_rsid_sorted.txt
+
+sort -k2 $DATA2/Day_chromosome_11_fence.txt > $DATA2/Day_chromosome_11_fence_sorted.txt
+
+join -j2 $DATA3/Day_chromosome_11_fence_rsid_sorted.txt $DATA2/Day_chromosome_11_fence.txt >$DATA2/Day_joined.txt
+
+awk '{print $2,$9}' $DATA2/Day_joined.txt >$DATA2/Day_joined_header.txt
+
+echo 'rsid pval' >$DATA2/Day_header.txt
+
+cat $DATA2/Day_header.txt $DATA2/Day_joined_header.txt >$DATA2/Day_locus_compare.txt
+
+# Input data into http://locuscompare.com/
