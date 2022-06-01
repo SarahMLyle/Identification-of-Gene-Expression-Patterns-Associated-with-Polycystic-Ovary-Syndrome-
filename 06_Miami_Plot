@@ -51,10 +51,10 @@ write.table(protein_coding, file="/Users/janicelyle/Desktop/TWAS-plotter-master/
 ######### Completed in Linux ######### 
 
 Rscript TWAS-plotter.V1.0.r \
---twas # file name  \
---sig_z # z value \
---sig_p # pvalue of smulitXcan \
---output # filename
+--twas file name  \
+--sig_z z value \
+--sig_p pvalue of smulitXcan \
+--output filename
 
 # file name:for_twas_plotter.txt
 # z score:
