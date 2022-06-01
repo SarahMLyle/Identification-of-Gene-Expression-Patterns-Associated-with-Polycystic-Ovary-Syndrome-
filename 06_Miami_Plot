@@ -47,15 +47,15 @@ names(protein_coding)[names(protein_coding) == "z_max"] <- "TWAS.Z"
 names(protein_coding)[names(protein_coding) == "pvalue"] <- "TWAS.P"
 write.table(protein_coding, file="/Users/janicelyle/Desktop/TWAS-plotter-master/Day_for_twas_plotter.txt", append = FALSE, sep ="\t", quote=FALSE,
             row.names = FALSE, col.names = TRUE) #Putting this file into TWAS_Plotter in Linux to create a Miamiplot 
-
+            
 ######### Completed in Linux ######### 
-
-Rscript TWAS-plotter.V1.0.r \
+#Have terminal/Linux to location where Rscript and file name are located              
+           
+Rscript TWAS plotter script \
 --twas file name  \
---sig_z z value \
 --sig_p pvalue of smulitXcan \
 --output filename
 
+# Rscript: #NOTE: requires older version!! https://github.com/opain/TWAS-plotter/blob/master/TWAS-plotter.V1.0.r
 # file name:for_twas_plotter.txt
-# z score:
 # p value: 2e-6
